@@ -46,33 +46,61 @@ def get_date_range(message):
 	item2 = types.KeyboardButton("Ближайшее домашнее задание.")
 	markup.add(item1,item2)
 	bot.send_message(message.chat.id, "Вы выбрали предмет - " + Ychenic_subject, reply_markup=markup)
+	print("Задание выбрано!")
 	bot.register_next_step_handler(message, get_homework)
 @bot.message_handler(content_types = ['text'])
 def get_homework(message):
+	markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+	item1 = types.KeyboardButton("Математика")
+	item2 = types.KeyboardButton("Русский язык")
+	item3 = types.KeyboardButton("Химия")
+	item4 = types.KeyboardButton("Физика")
+	item5 = types.KeyboardButton("История")
+	item6 = types.KeyboardButton("Биология")
+	item7 = types.KeyboardButton("Вернуться к выбору роли.")
+	markup.add(item1, item2, item3, item4, item5, item6, item7)
+
+	markup2 = types.ReplyKeyboardMarkup(resize_keyboard=True)
+	item = types.KeyboardButton("Учитель")
+	item_two = types.KeyboardButton("Ученик")
+	markup2.add(item, item_two)
+	global Ychenic_subject
 	today = datetime.datetime.today()
+	base = 0
 	x = []
 	y = datetime.datetime.strptime("01.01.9999", "%d.%m.%Y")
 	with open('data_base.csv') as csvfile:
 		reader = csv.DictReader(csvfile)
 		if message.text ==  "Все активные домашние задания.":
+			print("Выбрано все активные домашние задния!")
 			for row in reader:
 				row_date = datetime.datetime.strptime(row['date'], "%d.%m.%Y")
 				if (Ychenic_subject + ".") == row['subject'] and row_date > today:
-					bot.send_message(message.chat.id, row['date'] + row['homework'])
+					bot.send_message(message.chat.id, row['date'] + row['homework'], reply_markup=markup)
+					bot.register_next_step_handler(message, get_date_range)
+					base = 1
+		#if message.text == "Вернуться к выбору роли.":
+		#	message.text = "/start"
+		#	bot.send_message(message.chat.id, "Кто вы?", reply_markup=markup2)
+		#	bot.register_next_step_handler(message, working)
+			if base == 0:
+				bot.send_message(message.chat.id, "Заданий на " + Ychenic_subject + " нет", reply_markup=markup)
+				bot.send_message(message.chat.id, "Выбирите другой предмет.")
+				bot.register_next_step_handler(message, get_date_range)
 		if message.text == "Ближайшее домашнее задание.":
+			print("Выбрано ближайшее домашние задание!")
 			for row in reader:
 				row_date = datetime.datetime.strptime(row['date'], "%d.%m.%Y")
 				if (Ychenic_subject + ".") == row['subject'] and row_date > today:
 					x.append(row_date)
 			y = min(x)
-			print(reader)
 			reader2 = csv.DictReader(csvfile)
+			csvfile.seek(0)
 			for row1 in reader2:
-				print("thththth")
 				row_date2 = datetime.datetime.strptime(row1['date'], "%d.%m.%Y")
 				if (Ychenic_subject + ".") == row1['subject'] and row_date2 == y:
 					bot.send_message(message.chat.id, row1["subject"] + row1["homework"])
-				print(row1["date"])
+
 def get_password(message):
 	if message.text == password:
 		bot.send_message(message.chat.id, "Вы учитель. Теперь вы можете задать задание вашему классу! Укажите срок сдачи в формате ДД.ММ.ГГГГ." )
@@ -144,7 +172,6 @@ def return_to_start(message):
 
 	if message.text == "Вернуться к выбору роли.":
 		message.text = '/start'
-		print(message.text)
 		bot.send_message(message.chat.id, "Кто вы?", reply_markup=markup2 )
 		bot.register_next_step_handler(message, working)
 	if message.text == "Новое домашнее задание.":
@@ -154,4 +181,3 @@ def return_to_start(message):
 
 
 bot.polling(none_stop = True)
-
